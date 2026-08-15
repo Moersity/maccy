@@ -1,9 +1,13 @@
 import Defaults
+import QuartzCore
 import SwiftUI
 
 // An NSPanel subclass that implements floating panel traits.
 // https://stackoverflow.com/questions/46023769/how-to-show-a-window-without-stealing-focus-on-macos
 class FloatingPanel<Content: View>: NSPanel, NSWindowDelegate {
+  private static var openAnimationDuration: TimeInterval { 0.2 }
+  private static var resizeAnimationDuration: TimeInterval { 0.16 }
+
   var isPresented: Bool = false
   var statusBarButton: NSStatusBarButton?
   let onClose: () -> Void
@@ -46,6 +50,8 @@ class FloatingPanel<Content: View>: NSPanel, NSWindowDelegate {
     isMovableByWindowBackground = true
     hidesOnDeactivate = false
     backgroundColor = .clear
+    isOpaque = false
+    hasShadow = true
     titlebarSeparatorStyle = .none
 
     // Hide all traffic light buttons
@@ -62,7 +68,9 @@ class FloatingPanel<Content: View>: NSPanel, NSWindowDelegate {
             self.saveWindowPosition()
         })
     )
-    contentView?.layer?.cornerRadius = Popup.cornerRadius + Popup.horizontalPadding
+    contentView?.wantsLayer = true
+    contentView?.layer?.cornerRadius = Popup.panelCornerRadius
+    contentView?.layer?.masksToBounds = true
   }
 
   func toggle(height: CGFloat, at popupPosition: PopupPosition = Defaults[.popupPosition]) {
@@ -78,16 +86,40 @@ class FloatingPanel<Content: View>: NSPanel, NSWindowDelegate {
     let miniumHeight: CGFloat = AppState.shared.popup.minimumHeight
     let finalWidth = min(frame.width, size.width)
     let finalHeight = max(min(height, size.height), miniumHeight)
+    let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+
     setContentSize(NSSize(width: finalWidth, height: finalHeight))
     setFrameOrigin(popupPosition.origin(size: frame.size, statusBarButton: statusBarButton))
+    contentView?.layer?.removeAnimation(forKey: "spotlightOpenScale")
+    alphaValue = reduceMotion ? 1 : 0
     orderFrontRegardless()
     makeKey()
     isPresented = true
+
+    if !reduceMotion {
+      animateSpotlightOpen()
+    }
 
     if popupPosition == .statusItem {
       DispatchQueue.main.async {
         self.statusBarButton?.isHighlighted = true
       }
+    }
+  }
+
+  private func animateSpotlightOpen() {
+    let timing = CAMediaTimingFunction(controlPoints: 0.16, 1, 0.3, 1)
+    let scale = CABasicAnimation(keyPath: "transform.scale")
+    scale.fromValue = 0.965
+    scale.toValue = 1
+    scale.duration = Self.openAnimationDuration
+    scale.timingFunction = timing
+    contentView?.layer?.add(scale, forKey: "spotlightOpenScale")
+
+    NSAnimationContext.runAnimationGroup { context in
+      context.duration = Self.openAnimationDuration
+      context.timingFunction = timing
+      animator().alphaValue = 1
     }
   }
 
@@ -97,8 +129,9 @@ class FloatingPanel<Content: View>: NSPanel, NSWindowDelegate {
     var newOrigin = frame.origin
     newOrigin.y += (frame.height - newSize.height)
 
-    NSAnimationContext.runAnimationGroup { (context) in
-      context.duration = 0.2
+    NSAnimationContext.runAnimationGroup { context in
+      context.duration = Self.resizeAnimationDuration
+      context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.8, 0.2, 1)
       animator().setFrame(NSRect(origin: newOrigin, size: newSize), display: true)
     }
   }
@@ -208,6 +241,8 @@ class FloatingPanel<Content: View>: NSPanel, NSWindowDelegate {
 
   override func close() {
     super.close()
+    contentView?.layer?.removeAnimation(forKey: "spotlightOpenScale")
+    alphaValue = 1
     AppState.shared.preview.state = .closed
     isPresented = false
     statusBarButton?.isHighlighted = false

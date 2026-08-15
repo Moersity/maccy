@@ -8,19 +8,24 @@ struct SearchFieldView: View {
 
   var body: some View {
     ZStack {
-      RoundedRectangle(cornerRadius: Popup.cornerRadius, style: .continuous)
-        .fill(Color.secondary)
-        .opacity(0.1)
-        .frame(height: 23)
+      RoundedRectangle(cornerRadius: 13, style: .continuous)
+        .fill(Color.primary.opacity(0.07))
+        .overlay {
+          RoundedRectangle(cornerRadius: 13, style: .continuous)
+            .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+        }
+        .frame(height: Popup.searchFieldHeight)
 
-      HStack {
+      HStack(spacing: 12) {
         Image(systemName: "magnifyingglass")
-          .frame(width: 11, height: 11)
-          .padding(.leading, 5)
-          .opacity(0.8)
+          .font(.system(size: 21, weight: .regular))
+          .foregroundStyle(.secondary)
+          .frame(width: 24, height: 24)
+          .padding(.leading, 15)
           .accessibilityHidden(true)
 
         TextField(placeholder, text: $query)
+          .font(.system(size: 22, weight: .regular))
           .disableAutocorrection(true)
           .lineLimit(1)
           .textFieldStyle(.plain)
@@ -33,8 +38,10 @@ struct SearchFieldView: View {
             query = ""
           } label: {
             Image(systemName: "xmark.circle.fill")
-              .frame(width: 11, height: 11)
-              .padding(.trailing, 5)
+              .font(.system(size: 17))
+              .foregroundStyle(.secondary)
+              .frame(width: 20, height: 20)
+              .padding(.trailing, 14)
           }
           .buttonStyle(.plain)
           .opacity(0.9)

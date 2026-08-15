@@ -35,6 +35,7 @@ struct ListItemView<Title: View, ID: Hashable>: View {
   var image: NSImage?
   var accessoryImage: NSImage?
   var attributedTitle: AttributedString?
+  var subtitle: String? = nil
   var shortcuts: [KeyShortcut]
   var isSelected: Bool
   var selectionIndex: Int?
@@ -58,11 +59,11 @@ struct ListItemView<Title: View, ID: Hashable>: View {
       if showIcons, let appIcon {
         VStack {
           Spacer(minLength: 0)
-          AppImageView(appImage: appIcon, size: NSSize(width: 15, height: 15))
+          AppImageView(appImage: appIcon, size: NSSize(width: 26, height: 26))
           Spacer(minLength: 0)
         }
-        .padding(.leading, 4)
-        .padding(.vertical, 5)
+        .padding(.leading, 8)
+        .padding(.vertical, 7)
       }
 
       Spacer()
@@ -83,9 +84,19 @@ struct ListItemView<Title: View, ID: Hashable>: View {
           .padding(.trailing, 5)
           .padding(.vertical, 5)
       } else {
-        ListItemTitleView(attributedTitle: attributedTitle, title: title)
-          .accessibilityHidden(true)
-          .padding(.trailing, 5)
+        VStack(alignment: .leading, spacing: 1) {
+          ListItemTitleView(attributedTitle: attributedTitle, title: title)
+            .font(.system(size: 15))
+
+          if let subtitle, !subtitle.isEmpty {
+            Text(subtitle)
+              .font(.system(size: 11))
+              .foregroundStyle(isSelected ? Color.white.opacity(0.78) : .secondary)
+              .lineLimit(1)
+          }
+        }
+        .accessibilityHidden(true)
+        .padding(.trailing, 5)
       }
 
       Spacer()
@@ -124,7 +135,7 @@ struct ListItemView<Title: View, ID: Hashable>: View {
     .foregroundStyle(isSelected ? Color.white : .primary)
     // macOS 26 broke hovering if no background is present.
     // The slight opcaity white background is a workaround
-    .background(isSelected ? Color.accentColor.opacity(0.8) : .white.opacity(0.001))
+    .background(isSelected ? Color.accentColor.opacity(0.82) : .white.opacity(0.001))
     .clipShape(selectionAppearance.rect(cornerRadius: Popup.cornerRadius))
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(Text(accessibilityLabel))

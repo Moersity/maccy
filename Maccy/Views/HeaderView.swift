@@ -1,4 +1,3 @@
-import Defaults
 import SwiftUI
 
 struct HeaderView: View {
@@ -12,13 +11,13 @@ struct HeaderView: View {
   }
 
   var body: some View {
-    HStack(alignment: .top, spacing: 0) {
+    HStack(alignment: .center, spacing: 10) {
       HStack(alignment: .center, spacing: 0) {
         ListHeaderView(
           searchFocused: $searchFocused,
           searchQuery: $appState.history.searchQuery
         )
-        .padding(.horizontal, Popup.horizontalPadding)
+        .padding(.leading, Popup.horizontalPadding)
 
         ToolbarButton {
           controller.togglePreview()
@@ -34,6 +33,9 @@ struct HeaderView: View {
           tableName: "PreviewItemView",
           replacementKey: "previewKey"
         )
+        .foregroundStyle(.secondary)
+        .frame(width: Popup.searchFieldHeight, height: Popup.searchFieldHeight)
+        .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
         .padding(.trailing, Popup.horizontalPadding)
       }
       .opacity(appState.searchVisible ? 1 : 0)
@@ -41,7 +43,6 @@ struct HeaderView: View {
       .layoutPriority(1)
     }
     .padding(.top, Popup.verticalPadding)
-    .padding(.horizontal, 10)
     .animation(.default.speed(3), value: appState.navigator.leadSelection)
     .background(.clear)
     .frame(maxHeight: !appState.searchVisible ? 0 : nil, alignment: .top)

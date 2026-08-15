@@ -56,6 +56,11 @@ struct ContentView: View {
         try? await appState.history.load()
       }
     }
+    .clipShape(RoundedRectangle(cornerRadius: Popup.panelCornerRadius, style: .continuous))
+    .overlay {
+      RoundedRectangle(cornerRadius: Popup.panelCornerRadius, style: .continuous)
+        .strokeBorder(Color.white.opacity(0.16), lineWidth: 0.5)
+    }
     .animation(.easeInOut(duration: 0.2), value: appState.searchVisible)
     .environment(appState)
     .environment(modifierFlags)

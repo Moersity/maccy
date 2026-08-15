@@ -49,6 +49,7 @@ struct HistoryItemView: View {
       image: item.thumbnailImage,
       accessoryImage: item.thumbnailImage != nil ? nil : colorSwatchImage,
       attributedTitle: item.attributedTitle,
+      subtitle: item.application,
       shortcuts: item.shortcuts,
       isSelected: item.isSelected,
       selectionIndex: item.multiSelectionIndex,

@@ -11,6 +11,7 @@ import SwiftData
 @Observable
 class History: ItemsContainer { // swiftlint:disable:this type_body_length
   static let shared = History()
+  static let displayLimit = 10
   let logger = Logger(label: "org.p0deje.Maccy")
 
   var items: [HistoryItemDecorator] = []
@@ -86,7 +87,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
 
     Task {
       for await _ in Defaults.updates(.showSpecialSymbols, initial: false) {
-        for item in items {
+        for item in all {
           await updateTitle(item: item, title: item.item.generateTitle())
         }
       }
@@ -94,7 +95,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
 
     Task {
       for await _ in Defaults.updates(.imageMaxHeight, initial: false) {
-        for item in items {
+        for item in all {
           await item.cleanupImages()
         }
       }
@@ -106,7 +107,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
     let descriptor = FetchDescriptor<HistoryItem>()
     let results = try Storage.shared.context.fetch(descriptor)
     all = sorter.sort(results).map { HistoryItemDecorator($0) }
-    items = all
+    updateItems(search.search(string: searchQuery, within: all))
 
     limitHistorySize(to: Defaults[.size])
 
@@ -191,11 +192,10 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
       if let index = sortedItems.firstIndex(of: item) {
         all.insert(itemDecorator, at: index)
       }
-
-      items = all
-      updateUnpinnedShortcuts()
-      AppState.shared.popup.needsResize = true
     }
+
+    updateItems(search.search(string: searchQuery, within: all))
+    AppState.shared.popup.needsResize = true
 
     return itemDecorator
   }
@@ -293,7 +293,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
     }
 
     all.removeAll { $0 == item }
-    items.removeAll { $0 == item }
+    updateItems(search.search(string: searchQuery, within: all))
     sessionLog.removeValues { $0 == item.item }
 
     updateUnpinnedShortcuts()
@@ -459,7 +459,7 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
       all.insert(item, at: newIndex)
     }
 
-    items = all
+    updateItems(search.search(string: searchQuery, within: all))
 
     searchQuery = ""
     updateUnpinnedShortcuts()
@@ -486,7 +486,20 @@ class History: ItemsContainer { // swiftlint:disable:this type_body_length
   }
 
   private func updateItems(_ newItems: [Search.SearchResult]) {
-    items = newItems.map { result in
+    var unpinnedCount = 0
+    let displayedItems = newItems.filter { result in
+      if result.object.isPinned {
+        return true
+      }
+
+      guard unpinnedCount < Self.displayLimit else {
+        return false
+      }
+      unpinnedCount += 1
+      return true
+    }
+
+    items = displayedItems.map { result in
       let item = result.object
       item.highlight(searchQuery, result.ranges)
 

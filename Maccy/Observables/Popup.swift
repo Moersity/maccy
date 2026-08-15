@@ -17,24 +17,26 @@ enum PopupState {
 
 @Observable
 class Popup {
-  static let verticalSeparatorPadding = 6.0
-  static let horizontalSeparatorPadding = 6.0
-  static let verticalPadding: CGFloat = 5
-  static let horizontalPadding: CGFloat = 5
+  static let verticalSeparatorPadding = 5.0
+  static let horizontalSeparatorPadding = 12.0
+  static let verticalPadding: CGFloat = 10
+  static let horizontalPadding: CGFloat = 10
   static let minimumPreviewHeight: CGFloat = 150
+  static let panelCornerRadius: CGFloat = 18
+  static let searchFieldHeight: CGFloat = 52
 
   // Radius used for items inset by the padding. Ensures they visually have the same curvature
   // as the menu.
   static let cornerRadius: CGFloat = if #available(macOS 26.0, *) {
-    7
+    10
   } else {
-    4
+    10
   }
 
   static let itemHeight: CGFloat = if #available(macOS 26.0, *) {
-    24
+    44
   } else {
-    22
+    44
   }
 
   var needsResize = false

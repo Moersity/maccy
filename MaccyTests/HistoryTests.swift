@@ -264,6 +264,32 @@ class HistoryTests: XCTestCase { // swiftlint:disable:this type_body_length
     XCTAssertFalse(history.items.contains(items[1]))
   }
 
+  func testDisplayIsLimitedToTenUnpinnedItems() {
+    Defaults[.size] = 20
+    var addedItems: [HistoryItemDecorator] = []
+
+    for index in 0..<15 {
+      addedItems.append(history.add(historyItem(String(index))))
+    }
+
+    XCTAssertEqual(history.all.count, 15)
+    XCTAssertEqual(history.unpinnedItems, Array(addedItems.reversed().prefix(History.displayLimit)))
+  }
+
+  func testDeletingVisibleItemBackfillsFromFullHistory() {
+    Defaults[.size] = 20
+    var items: [HistoryItemDecorator] = []
+
+    for index in 0..<11 {
+      items.append(history.add(historyItem(String(index))))
+    }
+
+    history.delete(items[10])
+
+    XCTAssertEqual(history.unpinnedItems.count, History.displayLimit)
+    XCTAssertTrue(history.items.contains(items[0]))
+  }
+
   func testMaxSizeIsChanged() {
     var items: [HistoryItemDecorator] = []
     for index in 0...10 {

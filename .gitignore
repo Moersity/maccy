@@ -2,4 +2,5 @@ xcuserdata/
 Maccy.xcodeproj/project.xcworkspace/xcshareddata
 .idea
 .DS_Store
+build/
 Maccy/.DS_Store
