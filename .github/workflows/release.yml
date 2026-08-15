@@ -43,7 +43,8 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent \
             build/DerivedData/Build/Products/Release/Maccy.app \
             dist/Maccy.zip
-          shasum -a 256 dist/Maccy.zip > dist/SHA256SUMS.txt
+          cd dist
+          shasum -a 256 Maccy.zip > SHA256SUMS.txt
 
       - name: Create GitHub release
         env:
